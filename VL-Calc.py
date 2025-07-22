@@ -27,6 +27,7 @@ class ScreenCalcApp:
         style.configure("TEntry", font=("Segoe UI", 10))
         style.configure("TButton", font=("Segoe UI", 11, "bold"), padding=6)
         style.configure("Header.TLabel", font=("Segoe UI", 12, "bold"))
+        style.configure("Error.TEntry", foreground="black", fieldbackground="#ffcccc")  # Красный фон для ошибок
 
         # Основной фрейм
         main_frame = ttk.Frame(root)
@@ -95,6 +96,9 @@ class ScreenCalcApp:
         # Кнопка "Рассчитать"
         btn = ttk.Button(input_frame, text="Рассчитать", command=self.calculate)
         btn.pack(fill="x", pady=10)
+        # Label для ошибок
+        self.error_label = ttk.Label(input_frame, text="", foreground="red", font=("Segoe UI", 10))
+        self.error_label.pack(fill="x", pady=(0, 8))
 
         # Создание области результатов с прокруткой
         self.canvas = tk.Canvas(result_frame, highlightthickness=0, bd=0)
@@ -289,6 +293,13 @@ class ScreenCalcApp:
             entry.delete(0, tk.END)
             entry.configure(state="readonly")
 
+        # Очистка текста ошибки
+        self.error_label.config(text="")
+
+        # Сброс стилей ошибок для полей ввода
+        self.entries["screen_width"].config(style="TEntry")
+        self.entries["screen_height"].config(style="TEntry")
+
         try:
             # Получение входных данных
             module_w = self.safe_float(self.entries["module_width"].get())
@@ -313,6 +324,17 @@ class ScreenCalcApp:
             # Расчёты
             screen_w_mm = screen_w_m * 1000
             screen_h_mm = screen_h_m * 1000
+
+            # Проверка делимости ширины экрана на ширину модуля
+            if (screen_w_mm % module_w) != 0:
+                self.entries["screen_width"].config(style="Error.TEntry")
+                self.entries["screen_width"].focus_set()
+                raise ValueError("Ширина экрана должна быть кратна ширине модуля!")
+            # Проверка делимости высоты экрана на высоту модуля
+            if (screen_h_mm % module_h) != 0:
+                self.entries["screen_height"].config(style="Error.TEntry")
+                self.entries["screen_height"].focus_set()
+                raise ValueError("Высота экрана должна быть кратна высоте модуля!")
 
             modules_x = math.ceil(screen_w_mm / module_w)
             modules_y = math.ceil(screen_h_mm / module_h)
@@ -407,16 +429,9 @@ class ScreenCalcApp:
             self.canvas.configure(scrollregion=self.canvas.bbox("all"))
 
         except Exception as e:
-            self.result_entries["modules_x"].configure(state="normal")
-            self.result_entries["modules_x"].delete(0, tk.END)
-            self.result_entries["modules_x"].insert(0, f"Ошибка: {str(e)}")
-            self.result_entries["modules_x"].configure(state="readonly")
-            for key in self.result_entries:
-                if key != "modules_x":
-                    entry = self.result_entries[key]
-                    entry.configure(state="normal")
-                    entry.delete(0, tk.END)
-                    entry.configure(state="readonly")
+            self.error_label.config(text=str(e))
+            # Не выводить ошибку в result_entries
+            pass
 
 if __name__ == "__main__":
     root = tk.Tk()
