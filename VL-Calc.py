@@ -358,7 +358,7 @@ class ScreenCalcApp:
 
             total_psus = math.ceil(total_modules / modules_per_psu)
 
-            total_power_dc = available_power * total_psus
+            total_power_dc = power_per_module_dc * total_modules
             total_power_ac = total_power_dc / 0.7
             average_power_ac = total_power_ac / 3
             minimal_average_power_ac = average_power_ac / 3
