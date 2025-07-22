@@ -202,6 +202,7 @@ class ScreenCalcApp:
             ("Модулей на один блок питания:", "modules_per_psu"),
             ("Остаточная мощность на блок:", "reserve_power"),
             ("Всего блоков питания:", "total_psus"),
+            ("Остаток модулей:", "modules_remainder"),
         ]
         for label_text, key in result_fields_psu:
             self._create_result_field(self.result_frame_inner, row, label_text, key)
@@ -379,6 +380,10 @@ class ScreenCalcApp:
                 reserve_power = psu_power - power_per_module_dc
 
             total_psus = math.ceil(total_modules / modules_per_psu)
+            modules_remainder = total_modules % modules_per_psu
+
+            if modules_remainder > 0 and modules_remainder <= (modules_per_psu // 2):
+                total_psus -= 1
 
             total_power_dc = power_per_module_dc * total_modules
             total_power_ac = total_power_dc / 0.7
@@ -415,6 +420,7 @@ class ScreenCalcApp:
                 "total_power_ac": f"{self.format_number(total_power_ac)} Вт",
                 "average_power_ac": f"{self.format_number(average_power_ac)} Вт",
                 "minimal_average_power_ac": f"{self.format_number(minimal_average_power_ac)} Вт",
+                "modules_remainder": str(modules_remainder),
             }
 
             for key, value in results.items():
